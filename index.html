@@ -487,7 +487,7 @@
 
         .mode-control {
             margin: 20px 0;
-            display: flex;
+            display: none;
             justify-content: center;
             align-items: center;
             gap: 20px;
@@ -1101,8 +1101,8 @@
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 's') {
                 e.preventDefault();
-                gameMode.value = 'fixed';
-                gameMode.dispatchEvent(new Event('change'));
+                const gameModeSelect = document.getElementById('gameMode');
+                gameModeSelect.style.display = gameModeSelect.style.display === 'none' ? 'block' : 'none';
             }
         });
         modalClose.addEventListener('click', () => {
@@ -1121,6 +1121,15 @@
             currentMultiCount = 0;
             excludedOptions.clear();
             updateExcludeOptions();
+        });
+
+        // 添加Ctrl+Alt+S快捷键事件监听
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                const modeControl = document.querySelector('.mode-control');
+                modeControl.style.display = modeControl.style.display === 'none' ? 'flex' : 'none';
+            }
         });
 
         // 更新排除选项
