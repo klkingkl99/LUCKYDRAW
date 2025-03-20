@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KLKING88 Lucky Ball - Random Selection Tool</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="confetti.css">
     <style>
         * {
             margin: 0;
@@ -150,9 +151,11 @@
         }
 
         @keyframes winner-pulse {
-            0% { transform: translate(-50%, 50%) scale(1.5); }
-            50% { transform: translate(-50%, 50%) scale(1.7); }
-            100% { transform: translate(-50%, 50%) scale(1.5); }
+            0% { transform: translate(-50%, 50%) scale(1.5) rotate(0deg); }
+            25% { transform: translate(-50%, 50%) scale(1.65) rotate(5deg); }
+            50% { transform: translate(-50%, 50%) scale(1.8) rotate(0deg); }
+            75% { transform: translate(-50%, 50%) scale(1.65) rotate(-5deg); }
+            100% { transform: translate(-50%, 50%) scale(1.5) rotate(0deg); }
         }
 
         @keyframes float {
@@ -761,6 +764,10 @@
         const balls = [];
         const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6'];
         const audio = new Audio('sounds.mp3');
+        const winAudio = new Audio('win.mp3');
+        // 设置音量为最大
+        audio.volume = 1.0;
+        winAudio.volume = 1.0;
         const weightInput = document.getElementById('weightInput');
         const multiInput = document.getElementById('multiInput');
         const excludeOptions = document.getElementById('excludeOptions');
@@ -945,9 +952,49 @@
                 selectedBall.style.bottom = '50%';
                 selectedBall.style.left = '50%';
                 selectedBall.style.transform = 'translate(-50%, 50%) scale(1.5)';
-                selectedBall.style.boxShadow = '0 0 30px rgba(255, 255, 255, 0.8), 0 0 60px rgba(255, 255, 255, 0.6)';
-                selectedBall.style.animation = 'winner-pulse 1s ease-in-out infinite';
+                selectedBall.style.boxShadow = '0 0 30px rgba(255, 255, 255, 0.9), 0 0 60px rgba(255, 255, 255, 0.8), 0 0 90px rgba(255, 255, 255, 0.7)';
+                selectedBall.style.animation = 'winner-pulse 0.8s ease-in-out infinite';
                 selectedBall.style.zIndex = '100';
+                // 添加闪烁效果
+                const ballColor = window.getComputedStyle(selectedBall).backgroundColor;
+                const flashAnimation = `
+                    @keyframes flash-${randomIndex} {
+                        0%, 100% { box-shadow: 0 0 30px rgba(255, 255, 255, 0.9), 0 0 60px rgba(255, 255, 255, 0.8), 0 0 90px rgba(255, 255, 255, 0.7); }
+                        50% { box-shadow: 0 0 50px ${ballColor}, 0 0 80px ${ballColor}, 0 0 120px rgba(255, 255, 255, 0.9); }
+                    }
+                `;
+                const styleSheet = document.createElement('style');
+                styleSheet.textContent = flashAnimation;
+                document.head.appendChild(styleSheet);
+                selectedBall.style.animation = `winner-pulse 0.8s ease-in-out infinite, flash-${randomIndex} 1.2s ease-in-out infinite`;
+
+                // 创建彩蛋效果
+                const confettiContainer = document.createElement('div');
+                confettiContainer.className = 'confetti-container';
+                confettiContainer.style.position = 'fixed';
+                confettiContainer.style.top = '0';
+                confettiContainer.style.left = '0';
+                confettiContainer.style.width = '100%';
+                confettiContainer.style.height = '100%';
+                confettiContainer.style.zIndex = '9999';
+                confettiContainer.style.pointerEvents = 'none';
+                for (let i = 0; i < 30; i++) {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti-piece';
+                    confettiContainer.appendChild(confetti);
+                }
+                document.body.appendChild(confettiContainer);
+
+                // 播放胜利音效
+                if (soundEnabled) {
+                    try {
+                        winAudio.currentTime = 0;
+                        winAudio.loop = true;
+                        winAudio.play();
+                    } catch (error) {
+                        console.error('胜利音效播放失败:', error);
+                    }
+                }
 
                 // 显示结果
                 setTimeout(() => {
@@ -958,7 +1005,22 @@
                     fan.classList.remove('spin');
                     isSpinning = false;
                     startButton.disabled = false;
-                    if (soundEnabled) audio.pause();
+                    if (soundEnabled) {
+                        audio.pause();
+                        winAudio.loop = false;
+                        setTimeout(() => {
+                            winAudio.pause();
+                            winAudio.currentTime = 0;
+                        }, 1000);
+                    }
+                    
+                    // 清理彩蛋效果
+                    setTimeout(() => {
+                        const confettiContainer = document.querySelector('.confetti-container');
+                        if (confettiContainer) {
+                            document.body.removeChild(confettiContainer);
+                        }
+                    }, 3000);
 
                     // 添加到历史记录
                     const record = {
